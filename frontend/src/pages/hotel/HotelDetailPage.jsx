@@ -330,7 +330,8 @@ const HotelDetailPage = () => {
                   <MapContainer
                     center={[hotel.coords.lat, hotel.coords.lng]}
                     zoom={15}
-                    scrollWheelZoom={false}
+                    scrollWheelZoom={true}
+                    dragging={true}
                     style={{ width: "100%", height: "100%" }}
                   >
                     <TileLayer

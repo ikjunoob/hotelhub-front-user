@@ -13,10 +13,6 @@ services:
       - app-net
     volumes:
       - mongo-data:/data/db
-<<<<<<< HEAD
-=======
-      - ./backend/init-data.js:/tmp/init-data.js
->>>>>>> upstream/main
 
   backend:
     build:
@@ -25,12 +21,6 @@ services:
     container_name: express-dev
     ports:
       - "3000:3000"
-<<<<<<< HEAD
-    env_file:
-      - ./backend/.env
-    volumes:
-    
-=======
     environment:
       PORT: 3000
       MONGO_URI: mongodb://root:pass123@mongodb:27017/hotel-project?authSource=admin
@@ -38,7 +28,6 @@ services:
       JWT_EXPIRES_IN: 7d
       NODE_ENV: development
     volumes:
->>>>>>> upstream/main
       - ./backend:/app
       - /app/node_modules
     networks:

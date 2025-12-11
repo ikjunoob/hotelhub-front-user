@@ -134,3 +134,93 @@ select {
   white-space: nowrap;
   border: 0;
 }
+
+/* ============================================
+   React DatePicker 커스텀 스타일
+   달력 숫자만 검정색으로 변경
+   ============================================ */
+.react-datepicker__day,
+.react-datepicker__day-name {
+  color: #112211 !important;
+  font-weight: 500;
+}
+
+/* 일요일 - 요일 이름과 날짜 모두 빨간색 */
+.react-datepicker__day-name:first-child {
+  color: #ef4444 !important;
+  font-weight: 700;
+}
+
+/* 일요일 숫자 - 더 강력한 선택자 */
+.react-datepicker__month .react-datepicker__week:nth-child(1) .react-datepicker__day:nth-child(1),
+.react-datepicker__month .react-datepicker__week:nth-child(2) .react-datepicker__day:nth-child(1),
+.react-datepicker__month .react-datepicker__week:nth-child(3) .react-datepicker__day:nth-child(1),
+.react-datepicker__month .react-datepicker__week:nth-child(4) .react-datepicker__day:nth-child(1),
+.react-datepicker__month .react-datepicker__week:nth-child(5) .react-datepicker__day:nth-child(1),
+.react-datepicker__month .react-datepicker__week:nth-child(6) .react-datepicker__day:nth-child(1) {
+  color: #ef4444 !important;
+}
+
+.react-datepicker__day--sunday {
+  color: #ef4444 !important;
+}
+
+/* 선택된 날짜 */
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background-color: #8DD3BB;
+  color: #112211 !important;
+}
+
+/* 선택된 일요일 */
+.react-datepicker__day--sunday.react-datepicker__day--selected,
+.react-datepicker__day--sunday.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--sunday.react-datepicker__day--in-range {
+  color: #ef4444 !important;
+}
+
+/* 호버 상태 */
+.react-datepicker__day:hover {
+  background-color: #E8F5F1;
+  color: #112211 !important;
+}
+
+/* 일요일 호버 */
+.react-datepicker__day--sunday:hover {
+  color: #ef4444 !important;
+}
+
+/* 오늘 날짜 */
+.react-datepicker__day--today {
+  background-color: #ffffff;
+  border: 1px solid #8DD3BB;
+  color: #112211 !important;
+}
+
+/* 오늘이 일요일인 경우 */
+.react-datepicker__day--today.react-datepicker__day--sunday {
+  color: #ef4444 !important;
+  border: 1px solid #ef4444;
+}
+
+/* 비활성화 날짜 */
+.react-datepicker__day--disabled {
+  color: #cccccc !important;
+}
+
+/* DatePicker 헤더 높이 조정 */
+.react-datepicker__header {
+  padding: 1.2rem 0.8rem 0.8rem 0.8rem;
+}
+
+/* DatePicker 화살표 위치 - 월 바로 옆 */
+.react-datepicker__navigation--previous {
+  left: 1rem;
+  top: 1rem;
+}
+
+.react-datepicker__navigation--next {
+  right: 1rem;
+  top: 1rem;
+}
