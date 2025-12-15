@@ -135,10 +135,15 @@
         }
       }
 
+      // ★ 수정된 부분: password-wrapper에 너비 100%와 flex 속성 추가 ★
       .password-wrapper {
+        width: 100%;        // 부모 너비 꽉 채우기
         position: relative;
+        display: flex;      // 내부 input을 제어하기 위해 flex 사용
+        align-items: center;
 
         input {
+          width: 100%;      // input도 꽉 차게 설정
           padding-right: 4rem;
         }
 

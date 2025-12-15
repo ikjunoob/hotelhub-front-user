@@ -21,11 +21,14 @@ services:
     container_name: express-dev
     ports:
       - "3000:3000"
+    # 👇 [수정함] 이제 backend 폴더 안의 .env를 찾아갑니다.
+    env_file:
+      - ./backend/.env
     environment:
       PORT: 3000
+      # ⚠️ 주의: backend/.env 파일 안에 MONGO_URI가 'localhost'로 되어 있다면
+      # 도커 안에서는 안 될 수 있습니다. 여기서 덮어씌워 주는 게 안전합니다.
       MONGO_URI: mongodb://root:pass123@mongodb:27017/hotel-project?authSource=admin
-      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
-      JWT_EXPIRES_IN: 7d
       NODE_ENV: development
     volumes:
       - ./backend:/app
@@ -35,6 +38,26 @@ services:
     depends_on:
       - mongodb
     command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend-dev
+    ports:
+      - "5173:5173"
+    # 👇 [수정함] 이제 frontend 폴더 안의 .env를 찾아갑니다.
+    env_file:
+      - ./frontend/.env
+    environment:
+      - VITE_API_URL=http://localhost:80
+    networks:
+      - app-net
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
 
   nginx:
     image: nginx:alpine

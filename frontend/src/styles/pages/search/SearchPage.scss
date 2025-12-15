@@ -54,7 +54,12 @@
                     display: flex;
                     align-items: center;
                     gap: 0.8rem;
-                    padding: 1rem;
+
+                    /* ✅ [수정] 높이 고정 및 패딩 조정 */
+                    height: 3.5rem;      /* 높이를 3.5rem으로 고정 */
+                    padding: 0 1rem;     /* 위아래 패딩 0, 좌우 1rem */
+                    box-sizing: border-box; /* 테두리 포함 크기 계산 */
+
                     border: 2px solid rgba(255, 192, 203, 0.6);
                     border-radius: 0.6rem;
                     background: #fff;
@@ -76,6 +81,7 @@
                     input,
                     select {
                         width: 100%;
+                        height: 100%; /* input 높이 꽉 채우기 */
                         border: none;
                         outline: none;
                         font-size: 1.4rem;
@@ -88,11 +94,13 @@
                         font-size: 1.4rem;
                         color: #112211;
                         font-weight: 500;
+                        /* 텍스트 수직 중앙 정렬을 위해 flex 아이템 정렬 사용됨 (부모에 align-items: center 있음) */
                     }
 
                     /* DatePicker 스타일 */
                     .custom-datepicker {
                         width: 100%;
+                        height: 100%;
                         border: none;
                         outline: none;
                         cursor: pointer;
@@ -101,18 +109,23 @@
 
                     .react-datepicker-wrapper {
                         width: 100%;
+                        height: 100%;
+                        
+                        /* datepicker 내부 input도 높이 맞춤 */
+                        .react-datepicker__input-container input {
+                            height: 100%; 
+                        }
                     }
                 }
 
-                /* 첫 번째 항목(목적지)은 민트 색상 고정 */
+                /* 첫 번째 항목(목적지)은 민트 색상 고정 (필요시 색상 코드 수정) */
                 &:first-child {
                     .input-field {
                         border-color: rgba(255, 192, 203, 0.6);
-                        
                     }
                 }
 
-                /* 나머지 항목은 연핑크 외곽선 유지 (이미 기본값) */
+                /* 나머지 항목은 연핑크 외곽선 유지 */
                 &:not(:first-child) {
                     .input-field {
                         border-color: rgba(255, 192, 203, 0.6);
@@ -122,7 +135,6 @@
                 /* 인원 선택 팝업 스타일 */
                 .guest-popup {
                     position: absolute;
-                    
                     width: 100%;
                     min-width: 25rem;
                     background: #fff;

@@ -1,0 +1,233 @@
+.my-inquiries-page {
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 1rem;
+    }
+  }
+
+  .inquiries-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .inquiries-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .btn-new-inquiry {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: #0056b3;
+        }
+      }
+    }
+
+    .inquiry-form {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+
+      .form-group {
+        margin-bottom: 1.5rem;
+
+        label {
+          display: block;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 0.5rem;
+        }
+
+        input, select, textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 1rem;
+          transition: border-color 0.2s;
+
+          &:focus {
+            outline: none;
+            border-color: #007bff;
+          }
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 120px;
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+
+        button {
+          padding: 0.75rem 1.5rem;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:first-child {
+            background: #6c757d;
+            color: white;
+            border: none;
+
+            &:hover {
+              background: #545b62;
+            }
+          }
+
+          &:last-child {
+            background: #28a745;
+            color: white;
+            border: none;
+
+            &:hover {
+              background: #218838;
+            }
+          }
+        }
+      }
+    }
+
+    .inquiries-list {
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+
+        p {
+          font-size: 1.1rem;
+        }
+      }
+
+      .inquiry-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+
+        .inquiry-header {
+          background: #f8f9fa;
+          padding: 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+
+          .inquiry-info {
+            flex: 1;
+
+            h3 {
+              font-size: 1.1rem;
+              font-weight: 600;
+              color: #1a1a1a;
+              margin-bottom: 0.5rem;
+            }
+
+            .inquiry-meta {
+              display: flex;
+              gap: 1rem;
+              font-size: 0.9rem;
+              color: #666;
+
+              .category {
+                background: #e9ecef;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-weight: 500;
+              }
+            }
+          }
+
+          .inquiry-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+
+            .status-icon {
+              font-size: 1.2rem;
+
+              &.answered {
+                color: #28a745;
+              }
+
+              &.pending {
+                color: #ffc107;
+              }
+            }
+
+            span {
+              font-size: 0.8rem;
+              font-weight: 500;
+              color: #666;
+            }
+          }
+        }
+
+        .inquiry-content {
+          padding: 1.5rem;
+
+          p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+          }
+
+          .inquiry-answer {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            border-radius: 4px;
+
+            strong {
+              color: #28a745;
+              display: block;
+              margin-bottom: 0.5rem;
+            }
+
+            p {
+              margin: 0;
+              color: #333;
+            }
+          }
+        }
+      }
+    }
+  }
+}

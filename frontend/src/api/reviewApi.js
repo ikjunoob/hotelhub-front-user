@@ -11,6 +11,9 @@ export const reviewApi = {
   // query: hotelId?
   list: async (params = {}) => unwrap(await api.get('/reviews', { params })) || [],
 
+  // 내 리뷰 목록 (auth)
+  getMyReviews: async () => unwrap(await api.get('/reviews/my')) || [],
+
   // 리뷰 수정 (auth)
   // body(>=1개): { rating?(1-5), comment?, images?(uri[]) }
   update: async (id, payload) => unwrap(await api.patch(`/reviews/${id}`, payload)),

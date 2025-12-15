@@ -114,7 +114,7 @@ const AppRouter = () => {
           <Route path="payment" element={<MyPaymentPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="reviews" element={<MyReviewsPage />} />
-          {/* wishlist 라우트는 위쪽 public 영역으로 이동했으므로 여기서 제거 */}
+          <Route path="wishlist" element={<WishlistPage />} />
           <Route path="coupons" element={<MyCouponsPage />} />
           <Route path="points" element={<MyPointsPage />} />
           <Route path="inquiries" element={<MyInquiriesPage />} />
