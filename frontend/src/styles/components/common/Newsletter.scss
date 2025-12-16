@@ -5,21 +5,71 @@
 .newsletter-section {
   position: relative;
   z-index: 10;
-  /* 박스 높이가 줄어들었으므로 겹치는 정도도 비율에 맞춰 조정 */
-  margin-bottom: -13rem;
-  margin-top: 30rem;
+  /* 득스되 높이가 줄어들었으므로 겹치는 정도도 비율에 맧춰 조정 */
+  margin-bottom: -8rem;
+  margin-top: 25rem;
+  background: linear-gradient(to bottom, #fff 0%, #fff 50%, #8DD3BB 50%, #8DD3BB 100%);
+  padding-bottom: 1rem;
 
-  /* 흰색 가림막 높이도 비율에 맞춰 조정 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 60%;
-    /* 높이가 줄었으므로 흰색 배경 영역도 약간 줄임 */
-    background-color: #fff;
-    z-index: -1;
+  /* 팝업 메시지 스타일 */
+  .subscription-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    animation: popupAppear 0.4s ease-out;
+
+    .popup-content {
+      background: linear-gradient(135deg, #8DD3BB 0%, #6AC8A8 100%);
+      padding: 2.5rem 3.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 40px rgba(141, 211, 187, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      min-width: 350px;
+      backdrop-filter: blur(10px);
+
+      .popup-icon {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #fff;
+        animation: checkmark 0.5s ease-out 0.1s both;
+      }
+
+      p {
+        font-size: 1.6rem;
+        color: #fff;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+  }
+
+  @keyframes popupAppear {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.7);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  @keyframes checkmark {
+    0% {
+      transform: scale(0) rotate(-45deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.3) rotate(0deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
   }
 
   .inner {
@@ -34,10 +84,10 @@
     background-color: #CDECE1;
     border-radius: 2rem;
     /* ✅ 높이 줄이기 1: 내부 여백(패딩)을 줄임 */
-    padding: 3rem 5rem;
+    padding: 2.5rem 4rem;
     height: auto;
-    /* ✅ 높이 줄이기 2: 최소 높이를 38rem -> 30rem으로 줄임 */
-    min-height: 30rem;
+    /* ✅ 높이 쓰기 2: 최소 높이를 38rem -> 26rem으로 줄임 */
+    min-height: 26rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -153,6 +203,33 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           }
         }
+
+        .subscription-message {
+          margin-top: 1.5rem;
+          padding: 1.2rem 1.8rem;
+          font-size: 1.4rem;
+          color: #fff;
+          font-weight: 600;
+          animation: slideIn 0.3s ease-out;
+          
+          background: linear-gradient(135deg, #8DD3BB 0%, #6AC8A8 100%);
+          border-radius: 0.8rem;
+          box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+          border-left: 4px solid #5BB896;
+          
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          
+          &::before {
+            content: '✓';
+            display: inline-block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            animation: checkmark 0.4s ease-out;
+          }
+        }
       }
     }
 
@@ -211,6 +288,7 @@
           background-color: #FF9E9E;
           z-index: 3;
           border-radius: 0 0.5rem 0.5rem 0;
+          transition: transform 0.3s ease;
 
           &::before {
             content: '';
@@ -223,6 +301,57 @@
             border-radius: 0.2rem 0 0 0.2rem;
           }
         }
+        /* 편지 들어가는 애니메이션 요소 */
+        .letter {
+          position: absolute;
+          width: 12rem;
+          height: 8rem;
+          background: linear-gradient(135deg, #fff 0%, #f7f7f7 100%);
+          border: 2px solid #ddd;
+          border-radius: 0.4rem;
+          top: 8%;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 5;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          animation: letterDrop 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .letter::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 40%;
+          background: linear-gradient(to bottom, #FF6B9D 0%, #FF9E9E 100%);
+          border-radius: 0.2rem 0.2rem 0 0;
+          top: 0;
+          left: 0;
+        }
+        .letter::after {
+          content: '';
+          position: absolute;
+          width: 3px;
+          height: 60%;
+          background: #ddd;
+          left: 50%;
+          top: 20%;
+          transform: translateX(-50%);
+        }
+      }
+      /* active 상태에서 깃발 내려가는 애니메이션 */
+      &.active .mailbox-flag {
+        animation: flagDown 1s ease-out forwards;
+      }
+
+      @keyframes flagDown {
+        0% { transform: translateY(-50%) rotateZ(0deg); }
+        100% { transform: translateY(-50%) rotateZ(-90deg); }
+      }
+      @keyframes letterDrop {
+        0% { transform: translate(-50%, 0) scale(1); opacity: 0; }
+        15% { opacity: 1; }
+        40% { transform: translate(-50%, 20%) scale(1); opacity: 1; }
+        80% { transform: translate(-50%, 40%) scale(0.95); opacity: 0.9; }
+        100% { transform: translate(-50%, 60%) scale(0.85); opacity: 0; }
       }
 
       .mailbox-post {
@@ -232,6 +361,121 @@
         margin: -1rem auto 0;
         position: relative;
         z-index: 0;
+      }
+
+      /* Ambient decorations: floating letters & birds (always visible) */
+      .ambient-letters,
+      .ambient-birds {
+        position: absolute;
+        pointer-events: none;
+        z-index: 4;
+        right: -6rem;
+        bottom: 6rem;
+        width: 60rem;
+        height: 28rem;
+        overflow: visible;
+      }
+
+      /* Floating letters */
+      .floating-letter {
+        position: absolute;
+        width: 2.2rem;
+        height: 1.6rem;
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 0.2rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        opacity: 0.85;
+      }
+      .floating-letter::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 45%;
+        background: linear-gradient(to bottom, #ffd1dc 0%, #ff9eae 100%);
+        border-radius: 0.15rem 0.15rem 0 0;
+        opacity: 0.95;
+      }
+
+      .l1 { top: 6rem; left: 0rem;  animation: letterPath1 16s linear infinite; }
+      .l2 { top: 14rem; left: -4rem; animation: letterPath2 18s linear infinite; }
+      .l3 { top: 2rem; left: -2rem;  animation: letterPath3 14s linear infinite; }
+
+      @keyframes letterPath1 {
+        0%   { transform: translate(0, 0) rotate(0deg); }
+        25%  { transform: translate(20rem, -3rem) rotate(8deg); }
+        50%  { transform: translate(45rem, 1rem) rotate(-6deg); }
+        75%  { transform: translate(25rem, 4rem) rotate(10deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+      }
+      @keyframes letterPath2 {
+        0%   { transform: translate(0, 0) rotate(0deg); }
+        30%  { transform: translate(30rem, 2rem) rotate(-8deg); }
+        60%  { transform: translate(55rem, -2rem) rotate(6deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+      }
+      @keyframes letterPath3 {
+        0%   { transform: translate(0, 0) rotate(0deg); }
+        20%  { transform: translate(18rem, -2rem) rotate(6deg); }
+        50%  { transform: translate(40rem, 3rem) rotate(-5deg); }
+        80%  { transform: translate(22rem, 5rem) rotate(9deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+      }
+
+      /* Birds */
+      .bird {
+        position: absolute;
+        width: 0.8rem;
+        height: 0.8rem;
+        background: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.6);
+      }
+      .bird::before,
+      .bird::after {
+        content: '';
+        position: absolute;
+        width: 0.9rem;
+        height: 0.16rem;
+        background: #ffffff;
+        top: 0.3rem;
+        transform-origin: left center;
+        border-radius: 0.08rem;
+        opacity: 0.9;
+        animation: wingFlap 1s ease-in-out infinite;
+      }
+      .bird::before { left: -0.3rem; transform: rotate(18deg); }
+      .bird::after  { left: 0.2rem;  transform: rotate(-18deg); }
+
+      .b1 { top: 4rem;  left: -6rem;  animation: birdPath1 22s linear infinite; }
+      .b2 { top: 10rem; left: -10rem; animation: birdPath2 26s linear infinite; }
+      .b3 { top: 1rem;  left: -8rem;  animation: birdPath3 24s linear infinite; }
+
+      @keyframes wingFlap {
+        0%, 100% { transform: rotate(18deg); }
+        50%      { transform: rotate(-18deg); }
+      }
+
+      @keyframes birdPath1 {
+        0%   { transform: translate(0, 0); }
+        25%  { transform: translate(18rem, -2rem); }
+        50%  { transform: translate(40rem, -5rem); }
+        75%  { transform: translate(58rem, -3rem); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes birdPath2 {
+        0%   { transform: translate(0, 0); }
+        30%  { transform: translate(22rem, 1rem); }
+        60%  { transform: translate(50rem, -4rem); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes birdPath3 {
+        0%   { transform: translate(0, 0); }
+        20%  { transform: translate(16rem, -1rem); }
+        55%  { transform: translate(45rem, -6rem); }
+        100% { transform: translate(0, 0); }
       }
     }
   }

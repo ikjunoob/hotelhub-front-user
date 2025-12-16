@@ -20,6 +20,8 @@ const Footer = () => {
         <a
          key={index}
          href={social.href}
+         target="_blank"
+         rel="noopener noreferrer"
          className={`social-link ${social.className}`}
          aria-label={social.ariaLabel}
         ></a>
@@ -46,9 +48,27 @@ const Footer = () => {
       <h4 className="follow-title">Follow Us</h4>
 
       <div className="follow-icons">
-       <a href="#" className="follow-link facebook" aria-label="Facebook"></a>
-       <a href="#" className="follow-link instagram" aria-label="Instagram"></a>
-       <a href="#" className="follow-link youtube" aria-label="YouTube"></a>
+       <a 
+        href="https://www.kakao.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="follow-link kakao" 
+        aria-label="Kakao"
+       ></a>
+       <a 
+        href="https://www.instagram.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="follow-link instagram" 
+        aria-label="Instagram"
+       ></a>
+       <a 
+        href="https://www.youtube.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="follow-link youtube" 
+        aria-label="YouTube"
+       ></a>
       </div>
      </div>
     </div>

@@ -15,6 +15,8 @@ const DestinationCard = ({ destination }) => {
       guests: '2',
     });
     navigate(`/search?${searchParams.toString()}`);
+    // 페이지 상단으로 스크롤
+    window.scrollTo(0, 0);
   };
 
   return (

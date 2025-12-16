@@ -1,31 +1,31 @@
 export const socialLinks = [
   {
     name: "Facebook",
-    href: "#",
+    href: "https://www.facebook.com",
     className: "facebook",
     ariaLabel: "Facebook",
   },
   {
     name: "Twitter",
-    href: "#",
+    href: "https://www.twitter.com",
     className: "twitter",
     ariaLabel: "Twitter",
   },
   {
     name: "YouTube",
-    href: "#",
+    href: "https://www.youtube.com",
     className: "youtube",
     ariaLabel: "YouTube",
   },
   {
     name: "Instagram",
-    href: "#",
+    href: "https://www.instagram.com",
     className: "instagram",
     ariaLabel: "Instagram",
   },
   {
     name: "Kakao",
-    href: "#",
+    href: "https://www.kakao.com",
     className: "kakao", 
     ariaLabel: "KakaoTalk",
   },

@@ -12,8 +12,8 @@ footer {
 
 .footer-links {
   /* ✅ 높이 대폭 축소: 구독 박스와 겹치는 최소한의 공간만 남김 */
-  padding-top: 14rem; 
-  padding-bottom: 4rem;
+  padding-top: 10rem; 
+  padding-bottom: 3rem;
 
   .inner {
     max-width: 1440px; 
@@ -89,6 +89,7 @@ footer {
   /* 2. 우측 링크 컬럼들 (무조건 한 줄!) */
   .link-columns {
     flex: 1;
+    margin-top: 3rem;
     
     /* ✅ 핵심: Grid 대신 Flex 사용 + nowrap으로 줄바꿈 절대 금지 */
     display: flex;

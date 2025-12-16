@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { authApi } from "../../api/authApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faHeart, faTimes, faCheck } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/pages/mypage/ProfilePage.scss";
 
 const ProfilePage = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, setUser, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
   const [editingField, setEditingField] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +42,43 @@ const ProfilePage = () => {
   // 임시 수정값 저장
   const [editValue, setEditValue] = useState("");
 
+  // 이메일 변경 플로우 상태 (요청 -> 확인 -> 완료)
+  const [emailChangeStep, setEmailChangeStep] = useState(null); // null | 'request' | 'confirm' | 'success'
+  const [newEmail, setNewEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [emailChangeLoading, setEmailChangeLoading] = useState(false);
+  const [emailChangeMessage, setEmailChangeMessage] = useState("");
+
+  const mapEmailChangeError = (code) => {
+    const friendly = {
+      EMAIL_ALREADY_IN_USE: "이미 사용 중인 이메일입니다.",
+      CODE_MISMATCH: "인증번호가 올바르지 않습니다.",
+      CODE_EXPIRED: "인증번호가 만료되었습니다. 다시 요청해주세요.",
+      EMAIL_CHANGE_NOT_REQUESTED: "인증번호를 먼저 요청해주세요.",
+      CODE_NOT_FOUND: "인증번호를 찾을 수 없습니다.",
+      EMAIL_CHANGE_CODE_NOT_FOUND: "인증번호를 찾을 수 없습니다.",
+    };
+    return friendly[code] || code;
+  };
+
   // 수정 시작
   const handleEditStart = (field, currentValue) => {
-    setEditingField(field);
-    setEditValue(currentValue === "정보 없음" ? "" : currentValue);
     setErrorMessage("");
     setSuccessMessage("");
+
+    if (field === "email") {
+      const nextEmail = currentValue === "정보 없음" ? "" : currentValue;
+      setNewEmail(nextEmail);
+      setEmailCode("");
+      setEmailChangeMessage("");
+      setEmailChangeStep("request");
+      setEditingField(null);
+      setEditValue("");
+      return;
+    }
+
+    setEditingField(field);
+    setEditValue(currentValue === "정보 없음" ? "" : currentValue);
   };
 
   // 수정 저장
@@ -66,6 +98,18 @@ const ProfilePage = () => {
     // 전화번호 형식 검사
     if (field === "phone" && !isValidPhone(editValue)) {
       setErrorMessage("올바른 전화번호 형식이 아닙니다. (010-1234-5678)");
+      return;
+    }
+
+    // 이메일 변경은 별도 플로우 사용
+    if (field === "email") {
+      setErrorMessage("");
+      setEmailChangeMessage("");
+      setEmailChangeStep("request");
+      setNewEmail(editValue);
+      setEmailCode("");
+      setEditingField(null);
+      setEditValue("");
       return;
     }
 
@@ -100,6 +144,86 @@ const ProfilePage = () => {
     setEditingField(null);
     setEditValue("");
     setErrorMessage("");
+  };
+
+  const handleEmailChangeRequest = async () => {
+    const normalizedEmail = newEmail.trim();
+    if (!isValidEmail(normalizedEmail)) {
+      setErrorMessage("올바른 이메일 형식이 아닙니다.");
+      return;
+    }
+
+    setNewEmail(normalizedEmail);
+    setErrorMessage("");
+    setEmailChangeMessage("");
+
+    try {
+      setEmailChangeLoading(true);
+      await authApi.requestEmailChange(normalizedEmail);
+      setEmailChangeStep("confirm");
+      setEmailChangeMessage("입력하신 이메일로 인증 코드가 발송되었습니다.");
+    } catch (error) {
+      const msgCode = error?.response?.data?.message;
+      const msg = mapEmailChangeError(msgCode) || "인증 코드 요청에 실패했습니다.";
+      setErrorMessage(msg);
+    } finally {
+      setEmailChangeLoading(false);
+    }
+  };
+
+  const handleEmailChangeConfirm = async () => {
+    const trimmedCode = emailCode.trim();
+    if (!trimmedCode) {
+      setErrorMessage("인증 코드를 입력하세요.");
+      return;
+    }
+
+    setErrorMessage("");
+    setEmailChangeMessage("");
+
+    try {
+      setEmailChangeLoading(true);
+      await authApi.confirmEmailChange(trimmedCode);
+      setEmailChangeStep("success");
+      setEmailChangeMessage("이메일이 성공적으로 변경되었습니다.");
+      setSuccessMessage("이메일이 업데이트되었습니다.");
+      setEditingField(null);
+      setEditValue("");
+      setEmailCode("");
+
+      // 즉시 UI 반영 (낙관적 업데이트)
+      setFormData((prev) => ({
+        ...prev,
+        email: newEmail
+      }));
+      setUser((prev) => (prev ? { ...prev, email: newEmail } : prev));
+
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      // 서버 값으로 동기화
+      const refreshed = await refreshUser();
+      if (refreshed?.email) {
+        setFormData((prev) => ({
+          ...prev,
+          email: refreshed.email
+        }));
+      }
+    } catch (error) {
+      const msgCode = error?.response?.data?.message;
+      const msg = mapEmailChangeError(msgCode) || "이메일 변경에 실패했습니다.";
+      setErrorMessage(msg);
+    } finally {
+      setEmailChangeLoading(false);
+    }
+  };
+
+  const handleEmailChangeCancel = () => {
+    setEmailChangeStep(null);
+    setNewEmail("");
+    setEmailCode("");
+    setEmailChangeMessage("");
+    setErrorMessage("");
+    setSuccessMessage("");
   };
 
   // 이메일 유효성 검사
@@ -507,6 +631,108 @@ const ProfilePage = () => {
               <div className="plus-icon">+</div>
               <span>Add a new card</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {emailChangeStep && (
+        <div className="email-change-overlay" onClick={handleEmailChangeCancel}>
+          <div className="email-change-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="email-change-glow" />
+            <div className="email-change-header">
+              <div className="pill">Email Update</div>
+              <div className="email-change-title">
+                <h3>이메일 변경</h3>
+                <p>현재 이메일: {formData.email || "정보 없음"}</p>
+              </div>
+              <button className="icon-btn" onClick={handleEmailChangeCancel} disabled={emailChangeLoading}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+
+            <div className="email-change-steps">
+              <span className={emailChangeStep === "request" ? "active" : ""}>1. 새 이메일 입력</span>
+              <span className={emailChangeStep === "confirm" ? "active" : emailChangeStep === "success" ? "done" : ""}>2. 인증번호 입력</span>
+              <span className={emailChangeStep === "success" ? "done" : ""}>3. 완료</span>
+            </div>
+
+            {errorMessage && (
+              <div className="message error-message inline-message">✕ {errorMessage}</div>
+            )}
+            {emailChangeMessage && (
+              <div className="message success-message inline-message">✓ {emailChangeMessage}</div>
+            )}
+
+            {emailChangeStep === "request" && (
+              <div className="email-change-body">
+                <p className="helper-text">새 이메일을 입력하고 인증번호를 받아주세요.</p>
+                <div className="input-row">
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="new-email@example.com"
+                    disabled={emailChangeLoading}
+                  />
+                  <button
+                    className="btn-primary"
+                    onClick={handleEmailChangeRequest}
+                    disabled={emailChangeLoading || !newEmail.trim()}
+                  >
+                    {emailChangeLoading ? "전송 중..." : "인증번호 요청"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {emailChangeStep === "confirm" && (
+              <div className="email-change-body">
+                <p className="helper-text">{newEmail} 로 전송된 6자리 코드를 입력하세요.</p>
+                <div className="input-row">
+                  <input
+                    type="text"
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value)}
+                    placeholder="인증번호 6자리"
+                    disabled={emailChangeLoading}
+                  />
+                  <button
+                    className="btn-primary"
+                    onClick={handleEmailChangeConfirm}
+                    disabled={emailChangeLoading || !emailCode.trim()}
+                  >
+                    {emailChangeLoading ? "확인 중..." : "확인"}
+                  </button>
+                </div>
+                <div className="email-change-actions">
+                  <button
+                    className="ghost-btn"
+                    onClick={handleEmailChangeRequest}
+                    disabled={emailChangeLoading}
+                  >
+                    인증번호 다시 받기
+                  </button>
+                  <button
+                    className="ghost-btn"
+                    onClick={handleEmailChangeCancel}
+                    disabled={emailChangeLoading}
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {emailChangeStep === "success" && (
+              <div className="email-change-success">
+                <div className="success-icon">
+                  <FontAwesomeIcon icon={faCheck} />
+                </div>
+                <h4>이메일 변경 완료</h4>
+                <p>{newEmail} 으로 변경되었습니다.</p>
+                <button className="btn-primary" onClick={handleEmailChangeCancel}>닫기</button>
+              </div>
+            )}
           </div>
         </div>
       )}
