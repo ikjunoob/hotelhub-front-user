@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   mongodb:
@@ -13,22 +12,25 @@ services:
       - app-net
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping: 1})", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: express-dev
     ports:
       - "3000:3000"
-    # 👇 [수정함] 이제 backend 폴더 안의 .env를 찾아갑니다.
-    env_file:
-      - ./backend/.env
     environment:
       PORT: 3000
-      # ⚠️ 주의: backend/.env 파일 안에 MONGO_URI가 'localhost'로 되어 있다면
-      # 도커 안에서는 안 될 수 있습니다. 여기서 덮어씌워 주는 게 안전합니다.
+      # ✅ 수정: host.docker.internal -> mongodb (컨테이너끼리는 이름으로 통신)
       MONGO_URI: mongodb://root:pass123@mongodb:27017/hotel-project?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRES_IN: 7d
       NODE_ENV: development
     volumes:
       - ./backend:/app
@@ -42,22 +44,22 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: frontend-dev
+      dockerfile: Dockerfile
+    container_name: react-dev
     ports:
       - "5173:5173"
-    # 👇 [수정함] 이제 frontend 폴더 안의 .env를 찾아갑니다.
-    env_file:
-      - ./frontend/.env
     environment:
-      - VITE_API_URL=http://localhost:80
-    networks:
-      - app-net
+      # ✅ 수정: API 요청은 Nginx가 처리하므로 상대 경로 혹은 Nginx 주소를 타게 함
+      # 개발 환경에서는 Vite Proxy가 처리하므로 사실상 큰 의미는 없지만 localhost는 피함
+      VITE_API_URL: "" 
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    stdin_open: true
-    tty: true
+    networks:
+      - app-net
+    depends_on:
+      - backend
+    command: npm run dev
 
   nginx:
     image: nginx:alpine
@@ -65,12 +67,13 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      # ⚠️ 주의: nginx.conf 파일 위치가 정확한지 꼭 확인하세요!
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - app-net
     depends_on:
       - backend
       - frontend
-    networks:
-      - app-net
 
 networks:
   app-net:

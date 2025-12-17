@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +18,7 @@ import "../../styles/pages/search/HotelListPage.scss";
 import FilterSidebar from "./FilterSidebar";
 import { hotelApi } from "../../api/hotelApi";
 import { useWishlist } from "../../context/WishlistContext";
+import { defaultFilters, filterHotels } from "../../utils/filterHotels";
 
 const HotelListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,23 +29,26 @@ const HotelListPage = () => {
   const initialDest = searchParams.get("city") || searchParams.get("destination") || "";
   const initialCheckIn = searchParams.get("checkIn")
     ? new Date(searchParams.get("checkIn"))
-    : new Date();
+    : null;
   const initialCheckOut = searchParams.get("checkOut")
     ? new Date(searchParams.get("checkOut"))
-    : new Date();
+    : null;
   const initialRooms = Number(searchParams.get("rooms")) || 1;
-  const initialGuests = Number(searchParams.get("guests")) || 2;
+  const initialGuests = searchParams.get("guests")
+    ? Number(searchParams.get("guests"))
+    : null;
 
   const [destination, setDestination] = useState(initialDest);
   const [checkInDate, setCheckInDate] = useState(initialCheckIn);
   const [checkOutDate, setCheckOutDate] = useState(initialCheckOut);
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms, setRooms] = useState(initialRooms); // rooms는 검색 파라미터에 사용하지 않음
   const [guests, setGuests] = useState(initialGuests);
   const [showGuestPopup, setShowGuestPopup] = useState(false);
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [sortBy, setSortBy] = useState("recommend");
+  const [filters, setFilters] = useState(() => ({ ...defaultFilters }));
 
   /* 호텔 데이터 로드 */
   useEffect(() => {
@@ -52,10 +56,9 @@ const HotelListPage = () => {
       setLoading(true);
       try {
         const params = {
-          guests,
           sort: sortBy,
           page: 1,
-          limit: 20,
+          limit: 500,
         };
 
         // 목적지가 있으면 추가
@@ -67,6 +70,10 @@ const HotelListPage = () => {
         if (checkInDate && checkOutDate) {
           params.checkIn = checkInDate.toISOString().split('T')[0];
           params.checkOut = checkOutDate.toISOString().split('T')[0];
+        }
+
+        if (guests !== null) {
+          params.guests = guests;
         }
 
         const response = await hotelApi.getHotels(params);
@@ -86,11 +93,12 @@ const HotelListPage = () => {
   /* 카운터 핸들러 */
   const handleCounter = (type, operation) => {
     if (type === "rooms") {
-      if (operation === "inc") setRooms((prev) => prev + 1);
-      if (operation === "dec" && rooms > 1) setRooms((prev) => prev - 1);
+      // rooms는 현재 검색 파라미터에 포함하지 않음
+      return;
     } else {
-      if (operation === "inc") setGuests((prev) => prev + 1);
-      if (operation === "dec" && guests > 1) setGuests((prev) => prev - 1);
+      if (operation === "inc") setGuests((prev) => (prev || 0) + 1);
+      if (operation === "dec" && (guests || 1) > 1)
+        setGuests((prev) => Math.max((prev || 1) - 1, 1));
     }
   };
 
@@ -106,13 +114,25 @@ const HotelListPage = () => {
 
   /* 검색 실행 */
   const handleSearch = () => {
-    const params = {
-      city: destination,
-      guests: guests.toString(),
-      checkIn: checkInDate?.toISOString().split('T')[0],
-      checkOut: checkOutDate?.toISOString().split('T')[0],
-    };
+    const params = {};
+    if (destination) params.city = destination;
+    if (checkInDate && checkOutDate) {
+      params.checkIn = checkInDate.toISOString().split('T')[0];
+      params.checkOut = checkOutDate.toISOString().split('T')[0];
+    }
+    if (guests !== null) params.guests = guests.toString();
     setSearchParams(params);
+  };
+
+  const filteredHotels = useMemo(
+    () => filterHotels(hotels, filters),
+    [hotels, filters]
+  );
+
+  const handleFiltersChange = (updater) => {
+    setFilters((prev) =>
+      typeof updater === "function" ? updater(prev) : updater
+    );
   };
 
   return (
@@ -163,9 +183,9 @@ const HotelListPage = () => {
             </div>
           </div>
 
-          {/* Rooms & Guests */}
+          {/* Guests */}
           <div className="input-group" style={{ position: "relative" }}>
-            <label>Rooms & Guests</label>
+            <label>Guests</label>
             <div
               className="input-field pointer"
               onClick={() => setShowGuestPopup(!showGuestPopup)}
@@ -181,7 +201,9 @@ const HotelListPage = () => {
                   flex: 1,
                 }}
               >
-                {rooms} Room, {guests} Guests
+                {guests !== null
+                  ? `${guests} Guests`
+                  : "Select guests"}
               </span>
               <FontAwesomeIcon
                 icon={faChevronRight}
@@ -198,16 +220,16 @@ const HotelListPage = () => {
             {showGuestPopup && (
               <div className="guest-popup">
                 <div className="counter-row">
-                  <span className="label">Rooms</span>
+                  <span className="label">Guests</span>
                   <div className="counter-controls">
                     <button
-                      onClick={() => handleCounter("rooms", "dec")}
-                      disabled={rooms <= 1}
+                      onClick={() => handleCounter("guests", "dec")}
+                      disabled={guests <= 1}
                     >
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
-                    <span className="count">{rooms}</span>
-                    <button onClick={() => handleCounter("rooms", "inc")}>
+                    <span className="count">{guests}</span>
+                    <button onClick={() => handleCounter("guests", "inc")}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </div>
@@ -244,7 +266,10 @@ const HotelListPage = () => {
         <div className="search-layout-grid">
           {/* 왼쪽 사이드바 (필터) */}
           <aside className="search-sidebar">
-            <FilterSidebar />
+            <FilterSidebar
+              filters={filters}
+              onChange={handleFiltersChange}
+            />
           </aside>
 
           {/* 오른쪽 메인 콘텐츠 (호텔 리스트) */}
@@ -260,7 +285,7 @@ const HotelListPage = () => {
               }}
             >
               <h2 style={{ fontSize: "2rem" }}>
-                {loading ? "로딩 중..." : `Showing ${totalCount} places`}
+                {loading ? "로딩 중..." : `검색 결과 ${filteredHotels.length}곳`}
               </h2>
               <select
                 style={{
@@ -281,12 +306,22 @@ const HotelListPage = () => {
             {/* 호텔 카드 리스트 */}
             {loading ? (
               <div style={{ textAlign: "center", padding: "2rem" }}>로딩 중...</div>
-            ) : hotels.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "2rem" }}>검색 결과가 없습니다.</div>
+            ) : filteredHotels.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "2rem" }}>조건에 맞는 호텔이 없습니다.</div>
             ) : (
               <div className="hotel-list">
-                {hotels.map((hotel) => {
+                {filteredHotels.map((hotel) => {
                   const hotelId = hotel._id || hotel.id;
+                  const ratingValue =
+                    hotel.ratingAverage ??
+                    hotel.rating ??
+                    hotel.starRating ??
+                    0;
+                  const ratingCount =
+                    hotel.ratingCount ??
+                    hotel.reviewsCount ??
+                    hotel.reviews ??
+                    0;
                   return (
                     <div key={hotelId} className="hotel-card-list-item">
                       <div className="hotel-image-container">
@@ -307,10 +342,12 @@ const HotelListPage = () => {
                           </div>
                           <div className="price-section">
                             <div className="rating">
-                              <span className="rating-badge">{hotel.rating || 0}</span>
+                              <span className="rating-badge">
+                                {ratingValue ? ratingValue.toFixed(1) : "N/A"}
+                              </span>
                               <span className="rating-text">Very good</span>
                             </div>
-                            <p className="reviews">{hotel.reviewsCount || 0} reviews</p>
+                            <p className="reviews">{ratingCount} reviews</p>
                           </div>
                         </div>
 
@@ -346,7 +383,7 @@ const HotelListPage = () => {
             )}
 
             {/* Show more results 버튼 */}
-            {hotels.length > 0 && (
+            {filteredHotels.length > 0 && (
               <button className="btn-show-more">Show more results</button>
             )}
           </main>

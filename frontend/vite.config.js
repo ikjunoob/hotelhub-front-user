@@ -5,35 +5,32 @@ import react from "@vitejs/plugin-react";
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
 
-    // 🚨 [강제 수정] .env 파일 설정 무시하고 Docker 컨테이너 주소로 고정
-    // (혹시 .env 파일에 localhost로 되어있으면 충돌나므로 아예 박아버립니다)
+    // ✅ Docker Compose의 backend 컨테이너 이름(express-dev)과 포트(3000)가 일치해야 함
     const proxyTarget = "http://express-dev:3000"; 
 
-    console.log("✅ Current Proxy Target:", proxyTarget); // 터미널 로그 확인용
+    console.log("✅ Current Proxy Target:", proxyTarget);
 
     return {
         plugins: [react()],
         server: {
-            host: true, // 외부 접속 허용
+            host: true, // 0.0.0.0과 동일 (외부 접속 허용)
             port: 5173,
+            allowedHosts: true,
             watch: {
-                usePolling: true, // 윈도우/도커 파일 감지 호환성
+                usePolling: true,
             },
             proxy: {
                 "/api": {
                     target: proxyTarget,
                     changeOrigin: true,
                     secure: false,
-                    // 디버깅을 위해 프록시 에러 로그를 봅니다
+                    // 디버깅용 로그
                     configure: (proxy, _options) => {
                         proxy.on('error', (err, _req, _res) => {
                             console.log('proxy error', err);
                         });
                         proxy.on('proxyReq', (proxyReq, req, _res) => {
-                            console.log('Sending Request to the Target:', req.method, req.url);
-                        });
-                        proxy.on('proxyRes', (proxyRes, req, _res) => {
-                            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+                            console.log('Sending Request:', req.method, req.url);
                         });
                     },
                 },

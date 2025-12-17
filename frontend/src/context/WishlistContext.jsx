@@ -4,9 +4,34 @@ import { favoriteApi } from '../api/favoriteApi';
 
 const WishlistContext = createContext();
 
+const extractId = (target) => {
+  if (!target) return undefined;
+  if (typeof target === "string") return target;
+  return target._id || target.id || target.hotelId || target?.hotel?._id;
+};
+
 const normalizeHotel = (hotel = {}) => {
-  const id = hotel._id || hotel.id || hotel.hotelId || hotel?.hotel?._id;
-  return { ...hotel, id };
+  const id = extractId(hotel);
+  const primaryImage = hotel.image || hotel.images?.[0];
+  const ratingValue = hotel.rating ?? hotel.ratingAverage ?? hotel.starRating ?? 0;
+  const reviewCount = hotel.reviews ?? hotel.ratingCount ?? hotel.reviewsCount ?? 0;
+  const priceValue = hotel.price ?? hotel.basePrice ?? hotel.lowestPrice ?? 0;
+  const location = hotel.location || hotel.city || hotel.address;
+  const amenities =
+    Array.isArray(hotel.amenities) && hotel.amenities.length
+      ? hotel.amenities.join(", ")
+      : hotel.amenities;
+
+  return {
+    ...hotel,
+    id,
+    image: primaryImage,
+    rating: ratingValue,
+    reviews: reviewCount,
+    price: priceValue,
+    location,
+    amenities,
+  };
 };
 
 export const useWishlist = () => {
@@ -33,13 +58,13 @@ export const WishlistProvider = ({ children }) => {
     try {
       const favorites = await favoriteApi.getFavorites();
       const normalized = (favorites || []).map((fav) => ({
-        favoriteId: fav._id,
-        hotelId: fav.hotel?._id || fav.hotelId,
-        hotel: normalizeHotel(fav.hotel || fav),
+        favoriteId: fav._id || fav.id || fav.favoriteId,
+        hotelId: extractId(fav.hotel) || extractId(fav.hotelId),
+        hotel: normalizeHotel(fav.hotel || fav.hotelId || fav),
       }));
       setWishlist(normalized);
     } catch (error) {
-      console.error('찜하기 목록 로드 실패:', error);
+      console.error('짜 목록 로드 실패:', error);
     }
   };
 
@@ -54,9 +79,9 @@ export const WishlistProvider = ({ children }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setWishlist(parsed.map((hotel) => ({ hotel: normalizeHotel(hotel), hotelId: hotel.id })));
+        setWishlist(parsed.map((hotel) => ({ hotel: normalizeHotel(hotel), hotelId: extractId(hotel) })));
       } catch (error) {
-        console.error('찜하기 목록 로드 오류:', error);
+        console.error('짜 목록 로드 오류:', error);
       }
     } else {
       setWishlist([]);
@@ -67,8 +92,12 @@ export const WishlistProvider = ({ children }) => {
     const normalizedHotel = normalizeHotel(hotel);
     const hotelId = normalizedHotel.id;
 
-    // Already exists
-    if (wishlist.some((item) => item.hotelId === hotelId)) return;
+    if (!hotelId) {
+      alert("호텔 ID를 확인할 수 없습니다.");
+      return;
+    }
+
+    if (wishlist.some((item) => extractId(item.hotelId) === hotelId || extractId(item.hotel) === hotelId)) return;
 
     try {
       if (isAuthed) {
@@ -88,14 +117,14 @@ export const WishlistProvider = ({ children }) => {
         persistLocal(next);
       }
     } catch (error) {
-      console.error('찜하기 추가 실패:', error);
-      throw error;
+      console.error('짐 추가 실패:', error);
+      alert('짐 추가에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
   const removeFromWishlist = async (hotelId) => {
     const target = wishlist.find(
-      (item) => item.hotelId === hotelId || item.hotel?.id === hotelId || item.hotel?._id === hotelId
+      (item) => extractId(item.hotelId) === hotelId || extractId(item.hotel) === hotelId
     );
 
     try {
@@ -103,11 +132,11 @@ export const WishlistProvider = ({ children }) => {
         await favoriteApi.removeFavorite(target.favoriteId);
       }
     } catch (error) {
-      console.error('찜하기 제거 실패:', error);
-      throw error;
+      console.error('짜 해제 실패:', error);
+      alert('짜 해제에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       const next = wishlist.filter(
-        (item) => item.hotelId !== hotelId && item.hotel?.id !== hotelId && item.hotel?._id !== hotelId
+        (item) => extractId(item.hotelId) !== hotelId && extractId(item.hotel) !== hotelId
       );
       setWishlist(next);
       persistLocal(next);
@@ -115,10 +144,14 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const isInWishlist = (hotelId) =>
-    wishlist.some((item) => item.hotelId === hotelId || item.hotel?.id === hotelId || item.hotel?._id === hotelId);
+    wishlist.some((item) => extractId(item.hotelId) === hotelId || extractId(item.hotel) === hotelId);
 
   const toggleWishlist = async (hotel) => {
     const normalizedHotel = normalizeHotel(hotel);
+    if (!normalizedHotel.id) {
+      alert("호텔 ID를 확인할 수 없습니다.");
+      return;
+    }
     if (isInWishlist(normalizedHotel.id)) {
       await removeFromWishlist(normalizedHotel.id);
     } else {

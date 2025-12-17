@@ -13,7 +13,6 @@ const ownerId = owner ? owner._id : ObjectId();
 
 db.hotels.insertMany([
   {
-    name: "롯데호텔 서울",
     type: "hotel",
     city: "서울",
     address: "서울특별시 중구 을지로 30",

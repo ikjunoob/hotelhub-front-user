@@ -11,9 +11,9 @@ import "../../styles/components/home/HeroSection.scss";
 const HeroSection = ({ isCardVisible, onCardEnter, onCardLeave }) => {
   const navigate = useNavigate();
   const [destination, setDestination] = useState("");
-  const [checkInDate, setCheckInDate] = useState(new Date());
-  const [checkOutDate, setCheckOutDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)));
-  const [guests, setGuests] = useState(2);
+  const [checkInDate, setCheckInDate] = useState(null);
+  const [checkOutDate, setCheckOutDate] = useState(null);
+  const [guests, setGuests] = useState(null);
   const [rooms, setRooms] = useState(1);
   const [showGuestPopup, setShowGuestPopup] = useState(false);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
@@ -41,16 +41,24 @@ const HeroSection = ({ isCardVisible, onCardEnter, onCardLeave }) => {
   };
 
   const handleSearch = () => {
-    navigate({
-      pathname: "/search",
-      search: createSearchParams({ 
-        destination,
-        checkIn: checkInDate.toISOString().split('T')[0],
-        checkOut: checkOutDate.toISOString().split('T')[0],
-        guests,
-        rooms
-      }).toString(),
-    });
+    const params = {};
+    if (destination) params.destination = destination;
+    if (checkInDate && checkOutDate) {
+      params.checkIn = checkInDate.toISOString().split("T")[0];
+      params.checkOut = checkOutDate.toISOString().split("T")[0];
+    }
+    if (guests !== null) {
+      params.guests = guests;
+    }
+
+    if (Object.keys(params).length === 0) {
+      navigate("/search");
+    } else {
+      navigate({
+        pathname: "/search",
+        search: createSearchParams(params).toString(),
+      });
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -64,8 +72,8 @@ const HeroSection = ({ isCardVisible, onCardEnter, onCardLeave }) => {
       if (operation === "inc") setRooms(prev => prev + 1);
       if (operation === "dec" && rooms > 1) setRooms(prev => prev - 1);
     } else {
-      if (operation === "inc") setGuests(prev => prev + 1);
-      if (operation === "dec" && guests > 1) setGuests(prev => prev - 1);
+      if (operation === "inc") setGuests(prev => (prev || 0) + 1);
+      if (operation === "dec" && (guests || 1) > 1) setGuests(prev => Math.max((prev || 1) - 1, 1));
     }
   };
 

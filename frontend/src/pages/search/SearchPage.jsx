@@ -1,5 +1,5 @@
 /* src/pages/search/SearchPage.jsx */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,6 +17,7 @@ import "../../styles/pages/search/SearchPage.scss";
 import HotelCard from "../../components/hotel/HotelCard";
 import FilterSidebar from "./FilterSidebar";
 import { hotelApi } from "../../api/hotelApi";
+import { defaultFilters, filterHotels } from "../../utils/filterHotels";
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,17 +26,19 @@ const SearchPage = () => {
   const initialDest = searchParams.get("city") || searchParams.get("destination") || "";
   const initialCheckIn = searchParams.get("checkIn")
     ? new Date(searchParams.get("checkIn"))
-    : new Date();
+    : null;
   const initialCheckOut = searchParams.get("checkOut")
     ? new Date(searchParams.get("checkOut"))
-    : new Date();
+    : null;
   const initialRooms = Number(searchParams.get("rooms")) || 1;
-  const initialGuests = Number(searchParams.get("guests")) || 2;
+  const initialGuests = searchParams.get("guests")
+    ? Number(searchParams.get("guests"))
+    : null;
 
   const [destination, setDestination] = useState(initialDest);
   const [checkInDate, setCheckInDate] = useState(initialCheckIn);
   const [checkOutDate, setCheckOutDate] = useState(initialCheckOut);
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms, setRooms] = useState(initialRooms); // rooms는 검색 파라미터에 사용하지 않음
   const [guests, setGuests] = useState(initialGuests);
   const [showGuestPopup, setShowGuestPopup] = useState(false);
   const [hotels, setHotels] = useState([]);
@@ -43,6 +46,7 @@ const SearchPage = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("recommend");
+  const [filters, setFilters] = useState(() => ({ ...defaultFilters }));
 
   /* 호텔 데이터 로드 */
   useEffect(() => {
@@ -50,10 +54,9 @@ const SearchPage = () => {
       setLoading(true);
       try {
         const params = {
-          guests,
           sort: sortBy,
           page: currentPage,
-          limit: 12,
+          limit: 500,
         };
 
         // 목적지가 있으면 추가
@@ -67,13 +70,15 @@ const SearchPage = () => {
           params.checkOut = checkOutDate.toISOString().split('T')[0];
         }
 
-        console.log('🔍 호텔 검색 중:', params);
+        // 인원은 선택했을 때만 추가
+        if (guests !== null) {
+          params.guests = guests;
+        }
+
         const response = await hotelApi.getHotels(params);
-        console.log('✅ 호텔 검색 결과:', response);
         setHotels(response?.items || []);
         setTotalCount(response?.total || 0);
       } catch (error) {
-        console.error('❌ 호텔 로드 실패:', error);
         setHotels([]);
       } finally {
         setLoading(false);
@@ -86,24 +91,39 @@ const SearchPage = () => {
   /* 카운터 핸들러 */
   const handleCounter = (type, operation) => {
     if (type === "rooms") {
-      if (operation === "inc") setRooms((prev) => prev + 1);
-      if (operation === "dec" && rooms > 1) setRooms((prev) => prev - 1);
+      // rooms는 현재 검색 파라미터에 포함하지 않음
+      return;
     } else {
-      if (operation === "inc") setGuests((prev) => prev + 1);
-      if (operation === "dec" && guests > 1) setGuests((prev) => prev - 1);
+      if (operation === "inc") setGuests((prev) => (prev || 0) + 1);
+      if (operation === "dec" && (guests || 1) > 1)
+        setGuests((prev) => Math.max((prev || 1) - 1, 1));
     }
   };
 
   /* 검색 실행 */
   const handleSearch = () => {
-    const params = {
-      city: destination,
-      guests: guests.toString(),
-      checkIn: checkInDate?.toISOString().split('T')[0],
-      checkOut: checkOutDate?.toISOString().split('T')[0],
-      sort: sortBy,
-    };
+    const params = { sort: sortBy };
+    if (destination) params.city = destination;
+    if (checkInDate && checkOutDate) {
+      params.checkIn = checkInDate.toISOString().split("T")[0];
+      params.checkOut = checkOutDate.toISOString().split("T")[0];
+    }
+    if (guests !== null) {
+      params.guests = guests.toString();
+    }
     setSearchParams(params);
+    setCurrentPage(1);
+  };
+
+  const filteredHotels = useMemo(
+    () => filterHotels(hotels, filters),
+    [hotels, filters]
+  );
+
+  const handleFiltersChange = (updater) => {
+    setFilters((prev) =>
+      typeof updater === "function" ? updater(prev) : updater
+    );
     setCurrentPage(1);
   };
 
@@ -168,9 +188,9 @@ const SearchPage = () => {
             </div>
           </div>
 
-          {/* 객실 & 인원 */}
+          {/* 인원 */}
           <div className="input-group" style={{ position: "relative" }}>
-            <label>객실 & 인원</label>
+            <label>인원</label>
             <div
               className="input-field pointer"
               onClick={() => setShowGuestPopup(!showGuestPopup)}
@@ -186,7 +206,7 @@ const SearchPage = () => {
                   flex: 1,
                 }}
               >
-                {rooms}개 객실, 인원 {guests}명
+                {guests !== null ? `인원 ${guests}명` : "인원 선택"}
               </span>
               <FontAwesomeIcon
                 icon={faChevronRight}
@@ -202,22 +222,6 @@ const SearchPage = () => {
             {/* 인원수 팝업 */}
             {showGuestPopup && (
               <div className="guest-popup">
-                <div className="counter-row">
-                  <span className="label">객실</span>
-                  <div className="counter-controls">
-                    <button
-                      onClick={() => handleCounter("rooms", "dec")}
-                      disabled={rooms <= 1}
-                    >
-                      <FontAwesomeIcon icon={faMinus} />
-                    </button>
-                    <span className="count">{rooms}</span>
-                    <button onClick={() => handleCounter("rooms", "inc")}>
-                      <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                  </div>
-                </div>
-                <div className="divider"></div>
                 <div className="counter-row">
                   <span className="label">인원</span>
                   <div className="counter-controls">
@@ -250,7 +254,10 @@ const SearchPage = () => {
         <div className="search-layout-grid">
           {/* 왼쪽 사이드바 (필터) */}
           <aside className="search-sidebar">
-            <FilterSidebar />
+            <FilterSidebar
+              filters={filters}
+              onChange={handleFiltersChange}
+            />
           </aside>
 
           {/* 오른쪽 메인 콘텐츠 (호텔 리스트) */}
@@ -266,7 +273,7 @@ const SearchPage = () => {
               }}
             >
               <h2 style={{ fontSize: "2rem" }}>
-                {loading ? "로딩 중..." : `총 ${totalCount}개 호텔`}
+                {loading ? "로딩 중..." : `검색 결과 ${filteredHotels.length}개`}
               </h2>
               <select
                 style={{
@@ -285,11 +292,11 @@ const SearchPage = () => {
 
             {loading ? (
               <div style={{ textAlign: "center", padding: "2rem" }}>로딩 중...</div>
-            ) : hotels.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "2rem" }}>검색 결과가 없습니다.</div>
+            ) : filteredHotels.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "2rem" }}>조건에 맞는 호텔이 없습니다.</div>
             ) : (
               <div className="results-list">
-                {hotels.map((hotel) => (
+                {filteredHotels.map((hotel) => (
                   <HotelCard key={hotel._id || hotel.id} hotel={hotel} />
                 ))}
               </div>

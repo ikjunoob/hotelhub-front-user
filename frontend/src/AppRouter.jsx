@@ -4,6 +4,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import AuthLayout from "./components/layouts/AuthLayout";
 import MyPageLayout from "./components/layouts/MyPageLayout";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import ScrollToTop from "./components/common/ScrollToTop";
 import AddPaymentPage from "./pages/payment/AddPaymentPage";
 
 // pages
@@ -51,6 +52,7 @@ import NotFoundPage from "./pages/common/NotFoundPage";
 const AppRouter = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* 메인 레이아웃 (헤더/푸터 포함) */}
         <Route path="/" element={<MainLayout />}>
