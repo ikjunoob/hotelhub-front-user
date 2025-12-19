@@ -75,9 +75,18 @@ const SearchPage = () => {
           params.guests = guests;
         }
 
+        // 백엔드가 배열 또는 { items, total } 형태를 모두 반환할 수 있으므로 유연하게 처리
         const response = await hotelApi.getHotels(params);
-        setHotels(response?.items || []);
-        setTotalCount(response?.total || 0);
+        const items = Array.isArray(response)
+          ? response
+          : response?.items || [];
+        const total =
+          Array.isArray(response) && response.length
+            ? response.length
+            : response?.total ?? items.length ?? 0;
+
+        setHotels(items);
+        setTotalCount(total);
       } catch (error) {
         setHotels([]);
       } finally {
