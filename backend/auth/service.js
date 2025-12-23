@@ -6,7 +6,7 @@ import { sendMail } from "../common/mailer.js";
 
 const signToken = (id) => {
   const secret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
-  return jwt.sign({ id }, secret, { expiresIn: "30d" });
+  return jwt.sign({ id }, secret, { expiresIn: "3h" });
 };
 
 const generateSocialPassword = (providerId) =>
